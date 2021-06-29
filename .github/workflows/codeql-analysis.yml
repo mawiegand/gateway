@@ -38,8 +38,21 @@ jobs:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Use Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+
+    - name: Checkout source
+      uses: actions/checkout@master
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Install runner and dependencies
+      run: |
+        go get github.com/alecaivazis/run
+        export PATH=${PATH}:`go env GOPATH`/bin
+        run install:ci
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -66,26 +79,6 @@ jobs:
     #- run: |
     #   make bootstrap
     #   make release
-    - name: Use Go 1.13
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13
-
-    - name: Install runner and dependencies
-      run: |
-        go get github.com/alecaivazis/run
-        export PATH=${PATH}:`go env GOPATH`/bin
-        run install:ci
-    
-    - name: Get the version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      shell: bash
-
-    - name: Build and deploy binaries
-      run: |
-        export PATH=${PATH}:`go env GOPATH`/bin
-        run build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
